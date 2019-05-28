@@ -6,7 +6,7 @@ from MalariaDataset import *
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader,random_split
-
+from PIL import Image
 from model import *
 import torch.optim as optim
 import random
@@ -21,9 +21,7 @@ num_epochs = 1
 def load_data():
 
     #Create the dataset
-    dataset = MalariaDataset(csv_file='malaria.csv', transform=transforms.Compose([
-                                               transforms.Resize((100,100)),
-                                               transforms.ToTensor()]))
+    dataset = MalariaDataset(csv_file='malaria.csv', transform=transforms.Compose([transforms.Resize((100,100)),transforms.ToTensor()]))
 
     dataset_size = len(dataset)
     indices = list(range(dataset_size))
@@ -41,17 +39,20 @@ def load_data():
 
     return trainloader,testloader
 
-def show_batch(sample_batched):
+def show_batch(images,labels):
+        print(images.size(0))
 
-        images_batch, landmarks_batch = \
-            sample_batched['image'], sample_batched['label']
-        batch_size = len(images_batch)
-        im_size = images_batch.size(2)
+        batch_size = len(images)
+        im_size = images.size(0)
         grid_border_size = 2
 
-        grid = utils.make_grid(images_batch)
+
+        grid = utils.make_grid(images)
+        print(grid.size())
         plt.imshow(grid.numpy().transpose((1, 2, 0)))
         plt.title('Batch from dataloader')
+        plt.show()
+
 
 def train(model,trainloader,learning_rate,num_epochs):
 
@@ -93,23 +94,27 @@ def main():
     trainloader,testloader = load_data()
 
 
-    #
-    # for i_batch, sample_batched in enumerate(trainloader):
-    #     print(i_batch, sample_batched['image'].size(),
-    #           sample_batched['label'])
-    #
-    #
-    #     if i_batch == 2:
-    #         plt.figure()
-    #         show_batch(sample_batched)
-    #         plt.axis('off')
-    #         plt.ioff()
-    #         plt.show()
-    #         break
+    for i_batch, (images,labels) in enumerate(trainloader):
+
+        print(i_batch, images.size(),
+              labels)
+
+        show_batch(images,labels)
+        if i_batch ==1:
+            break
+
+
+        # if i_batch == 2:
+        #     plt.figure()
+        #     show_batch(sample_batched)
+        #     plt.axis('off')
+        #     plt.ioff()
+        #     plt.show()
+        #     break
 
 
     model = CNN()
-    train(model,trainloader,learning_rate,num_epochs)
+    #train(model,trainloader,learning_rate,num_epochs)
 
     #model.load_state_dict(torch.load('autoencoder.pth'))
     #model.eval()

@@ -7,7 +7,7 @@ import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-
+from PIL import Image
 
 class MalariaDataset(Dataset):
 
@@ -20,18 +20,15 @@ class MalariaDataset(Dataset):
 
     def __getitem__(self, index):
         img_name = self.df.iloc[index, 0]
-        image = io.imread(img_name)
+        image = Image.fromarray(np.asarray(io.imread(img_name)))
         label = self.df.iloc[index, 1]
 
-        sample = {'image': image, 'label': label}
-
         if self.transform:
-            print(self.transform)
-            sample['image'] = self.transform(sample['image'])
+            image = self.transform(image)
 
-        return sample
+        return image,label
 
-    def show_image(self,image, label):
+    def show_image(self, image , label):
 
         plt.imshow(image)
         plt.pause(0.001)  # pause a bit so that plots are updated
