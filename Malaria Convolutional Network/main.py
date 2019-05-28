@@ -14,7 +14,7 @@ from   torch.autograd import Variable
 
 
 learning_rate = .0000001
-batch_size = 4
+batch_size = 64
 num_epochs = 1
 
 #Load in the data from the testing and training datasets
@@ -40,7 +40,6 @@ def load_data():
     return trainloader,testloader
 
 def show_batch(images,labels):
-        print(images.size(0))
 
         batch_size = len(images)
         im_size = images.size(0)
@@ -48,7 +47,6 @@ def show_batch(images,labels):
 
 
         grid = utils.make_grid(images)
-        print(grid.size())
         plt.imshow(grid.numpy().transpose((1, 2, 0)))
         plt.title('Batch from dataloader')
         plt.show()
@@ -62,17 +60,20 @@ def train(model,trainloader,learning_rate,num_epochs):
     for epoch in range(num_epochs):
         print('Epoch Number: ', epoch)
 
-        for i, sample in enumerate(trainloader):
-            output = model(sample['image'])
+        for i, (images,labels) in enumerate(trainloader):
+            output = model(images)
+            labels = labels.view(batch_size,1)
+
 
             optimizer.zero_grad()
 
-            loss = criterion(output,sample['label'].float())
+            loss = criterion(output,labels.float())
 
             print('Loss at ',i,': ',loss)
 
             loss.backward()
             optimizer.step()
+
 
     torch.save(model.state_dict(), 'malaria.pth')
 
@@ -100,21 +101,12 @@ def main():
               labels)
 
         show_batch(images,labels)
-        if i_batch ==1:
+        if i_batch == 1:
             break
 
 
-        # if i_batch == 2:
-        #     plt.figure()
-        #     show_batch(sample_batched)
-        #     plt.axis('off')
-        #     plt.ioff()
-        #     plt.show()
-        #     break
-
-
     model = CNN()
-    #train(model,trainloader,learning_rate,num_epochs)
+    train(model,trainloader,learning_rate,num_epochs)
 
     #model.load_state_dict(torch.load('autoencoder.pth'))
     #model.eval()
