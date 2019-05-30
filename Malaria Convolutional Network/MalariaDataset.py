@@ -20,7 +20,7 @@ class MalariaDataset(Dataset):
 
     def __getitem__(self, index):
         img_name = self.df.iloc[index, 0]
-        image = Image.fromarray(np.asarray(io.imread(img_name)))
+        image = Image.open(img_name)
         label = self.df.iloc[index, 1]
 
         if self.transform:

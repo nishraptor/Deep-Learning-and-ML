@@ -13,15 +13,15 @@ import random
 from   torch.autograd import Variable
 
 
-learning_rate = .0000001
-batch_size = 64
-num_epochs = 1
+learning_rate = .00001
+batch_size = 128
+num_epochs = 3
 
 #Load in the data from the testing and training datasets
 def load_data():
 
     #Create the dataset
-    dataset = MalariaDataset(csv_file='malaria.csv', transform=transforms.Compose([transforms.Resize((100,100)),transforms.ToTensor()]))
+    dataset = MalariaDataset(csv_file='malaria.csv', transform=transforms.Compose([transforms.Resize((100,100)),transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]))
 
     dataset_size = len(dataset)
     indices = list(range(dataset_size))
@@ -62,7 +62,7 @@ def train(model,trainloader,learning_rate,num_epochs):
 
         for i, (images,labels) in enumerate(trainloader):
             output = model(images)
-            labels = labels.view(batch_size,1)
+            labels = labels.view(labels.size(0),1)
 
 
             optimizer.zero_grad()
@@ -79,39 +79,47 @@ def train(model,trainloader,learning_rate,num_epochs):
 
 def test(model, testloader):
 
-    dataiter = iter(testloader)
-    images, labels = dataiter.next()
+    total = 0
+    correct = 0
+    for i, (images, labels) in enumerate(testloader):
 
-    with torch.no_grad():
-        output, code = model(images)
 
-    print(output[0].shape)
-    imshow(torchvision.utils.make_grid(output),False)
-    imshow(torchvision.utils.make_grid(images))
+        with torch.no_grad():
+            output = model(images)
 
+        labels = labels.view(labels.size(0),1)
+
+        t = (torch.eq(torch.round(output),labels.float()))
+
+        total += t.size(0)
+        correct += (torch.sum(t)).item()
+        print(correct/total)
+
+    print('Accuracy = ',correct/total)
 def main():
 
     #Process the data and create the train and testloaders
     trainloader,testloader = load_data()
 
 
-    for i_batch, (images,labels) in enumerate(trainloader):
-
-        print(i_batch, images.size(),
-              labels)
-
-        show_batch(images,labels)
-        if i_batch == 1:
-            break
+    # for i_batch, (images,labels) in enumerate(trainloader):
+    #
+    #     print(i_batch, images.size(),
+    #           labels)
+    #
+    #     show_batch(images,labels)
+    #     if i_batch == 1:
+    #         break
 
 
     model = CNN()
-    train(model,trainloader,learning_rate,num_epochs)
 
-    #model.load_state_dict(torch.load('autoencoder.pth'))
-    #model.eval()
+    #train(model,trainloader,learning_rate,num_epochs)
 
-    #test(model,testloader)
+    model.load_state_dict(torch.load('malaria.pth'))
+    model.eval()
+
+    test(model,testloader)
 
 if __name__ == '__main__':
     main()
